@@ -32,5 +32,8 @@ RUN uv pip install nest_asyncio
 
 COPY . .
 
+# Patch pyrogram dispatcher to ignore "Peer id invalid" errors
+RUN sed -i 's/await parser(update, users, chats)/try:\n                await parser(update, users, chats)\n            except ValueError as e:\n                if "Peer id invalid" not in str(e):\n                    raise/' .venv/lib/python3.12/site-packages/pyrogram/dispatcher.py || true
+
 # Starting Bot
 ENTRYPOINT ["uv", "run", "python", "-m", "wbb"]
