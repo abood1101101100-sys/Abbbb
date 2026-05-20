@@ -29,7 +29,7 @@ from contextlib import suppress
 from pyrogram import filters, idle
 from pyrogram.enums import ChatType, ParseMode
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
-from uvloop import install
+
 
 import wbb
 from wbb import app, log
@@ -511,6 +511,6 @@ async def help_button(client, query):
 
 
 if __name__ == "__main__":
-    install()
+    import uvloop
     with suppress(asyncio.exceptions.CancelledError):
-        asyncio.run(start_bot())
+        uvloop.run(start_bot())
