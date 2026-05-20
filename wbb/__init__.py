@@ -2,24 +2,7 @@
 MIT License
 
 Copyright (c) 2024 TheHamkerCat
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+...
 """
 import time
 from inspect import getfullargspec
@@ -79,10 +62,12 @@ log.info("Initializing MongoDB client")
 mongo_client = MongoClient(MONGO_URL)
 db = mongo_client.wbb
 
-# متغيرات عامة يتم تهيئتها لاحقاً في initialize()
+# متغيرات عامة - تُهيَّأ داخل initialize()
 aiohttpsession = None
 arq = None
 telegraph = None
+app = None
+app2 = None
 
 BOT_ID = None
 BOT_NAME = None
@@ -95,24 +80,6 @@ USERBOT_NAME = None
 USERBOT_USERNAME = None
 USERBOT_MENTION = None
 USERBOT_DC_ID = None
-
-# إنشاء كلاينت البوت واليوزربوت
-if not SESSION_STRING:
-    app2 = Client(
-        name="sessions/userbot",
-        api_id=API_ID,
-        api_hash=API_HASH,
-        phone_number=PHONE_NUMBER,
-    )
-else:
-    app2 = Client(
-        name="sessions/userbot",
-        api_id=API_ID,
-        api_hash=API_HASH,
-        session_string=SESSION_STRING,
-    )
-
-app = Client("sessions/wbb", bot_token=BOT_TOKEN, api_id=API_ID, api_hash=API_HASH)
 
 
 async def load_sudoers():
@@ -136,11 +103,29 @@ async def load_sudoers():
 
 
 async def initialize():
-    global aiohttpsession, arq, telegraph
+    global aiohttpsession, arq, telegraph, app, app2
     global BOT_ID, BOT_NAME, BOT_USERNAME, BOT_MENTION, BOT_DC_ID
     global USERBOT_ID, USERBOT_NAME, USERBOT_USERNAME, USERBOT_MENTION, USERBOT_DC_ID
 
     await load_sudoers()
+
+    # إنشاء الكلاينت داخل الـ event loop الصحيح
+    if not SESSION_STRING:
+        app2 = Client(
+            name="sessions/userbot",
+            api_id=API_ID,
+            api_hash=API_HASH,
+            phone_number=PHONE_NUMBER,
+        )
+    else:
+        app2 = Client(
+            name="sessions/userbot",
+            api_id=API_ID,
+            api_hash=API_HASH,
+            session_string=SESSION_STRING,
+        )
+
+    app = Client("sessions/wbb", bot_token=BOT_TOKEN, api_id=API_ID, api_hash=API_HASH)
 
     aiohttpsession = ClientSession()
     arq = ARQ(ARQ_API_URL, ARQ_API_KEY, aiohttpsession)
