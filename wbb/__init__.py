@@ -9,9 +9,6 @@ from inspect import getfullargspec
 from os import path
 from pathlib import Path
 
-import uvloop
-uvloop.install()  # يجب أن يكون قبل أي شيء آخر
-
 from aiohttp import ClientSession
 from motor.motor_asyncio import AsyncIOMotorClient as MongoClient
 from pyrogram import Client, filters
