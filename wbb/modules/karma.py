@@ -2,24 +2,7 @@
 MIT License
 
 Copyright (c) 2024 TheHamkerCat
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+...
 """
 import re
 
@@ -88,8 +71,7 @@ async def upvote(_, message):
         new_karma = {"karma": karma}
         await update_karma(chat_id, await int_to_alpha(user_id), new_karma)
     await message.reply_text(
-        f"⬆️ تمت زيادة كارما {user_mention} بمقدار 1
-المجموع: {karma}"
+        f"⬆️ تمت زيادة كارما {user_mention} بمقدار 1\nالمجموع: {karma}"
     )
 
 
@@ -140,8 +122,7 @@ async def downvote(_, message):
         new_karma = {"karma": karma}
         await update_karma(chat_id, await int_to_alpha(user_id), new_karma)
     await message.reply_text(
-        f"⬇️ تم تقليل كارما {user_mention} بمقدار 1
-المجموع: {karma}"
+        f"⬇️ تم تقليل كارما {user_mention} بمقدار 1\nالمجموع: {karma}"
     )
 
 
@@ -149,69 +130,68 @@ async def downvote(_, message):
 @capture_err
 async def command_karma(_, message):
     chat_id = message.chat.id
-    
+
     if not message.reply_to_message:
         m = await message.reply_text("جارٍ تحليل الكارما...")
-        
+
         try:
             karma = await get_karmas(chat_id)
             if not karma:
                 return await m.edit("لا يوجد كارما مسجّل لهذه المحادثة.")
-            
+
             karma_dicc = {}
             for i in karma:
                 try:
                     user_id = await alpha_to_int(i)
                     user_karma = karma[i]["karma"]
                     karma_dicc[str(user_id)] = user_karma
-                except Exception as e:
+                except Exception:
                     continue
-            
+
             if not karma_dicc:
                 return await m.edit("لا يوجد كارما مسجّل لهذه المحادثة.")
-            
+
             karma_sorted = sorted(
                 karma_dicc.items(),
                 key=lambda item: item[1],
                 reverse=True
             )
-            
+
             try:
                 user_ids_needed = [int(uid) for uid, _ in karma_sorted]
                 userdb = await get_specific_usernames(app, user_ids_needed)
             except Exception as e:
                 return await m.edit(f"Error fetching user data: {str(e)}")
-            
+
             karma_display = {}
             limit = 0
-            
+
             for user_id_str, karma_count in karma_sorted:
                 if limit >= 15:
                     break
-                
+
                 user_id_int = int(user_id_str)
-                
+
                 if user_id_int not in userdb:
                     continue
-                
+
                 username = userdb[user_id_int]
                 karma_display[f"@{username}"] = [f"**{karma_count}**"]
                 limit += 1
-            
+
             if not karma_display:
                 return await m.edit("لا يوجد مستخدمون لديهم كارما.")
-            
+
             msg = f"Karma list of {message.chat.title}"
             await m.edit(section(msg, karma_display))
-            
+
         except Exception as e:
             await m.edit(f"An error occurred: {str(e)}")
-            rais
-    
+
     else:
         if not message.reply_to_message.from_user:
             return await message.reply("المستخدم المجهول ليس لديه كارما.")
-        
+
         user_id = message.reply_to_message.from_user.id
         try:
             karma = await get_karma(chat_id, await int_to_alpha(user_id))
@@ -219,7 +199,6 @@ async def command_karma(_, message):
             await message.reply_text(f"**Total Points**: __{karma_value}__")
         except Exception as e:
             await message.reply_text(f"Error fetching karma: {str(e)}")
-
 
 
 @app.on_message(filters.command("karma_toggle", prefixes="/!") & ~filters.private)
