@@ -511,5 +511,6 @@ async def help_button(client, query):
 
 
 if __name__ == "__main__":
+    import uvloop
     with suppress(asyncio.exceptions.CancelledError):
-        asyncio.run(start_bot())
+        uvloop.run(start_bot())
