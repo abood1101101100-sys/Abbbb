@@ -28,6 +28,7 @@ FROM base
 
 ENV UV_NO_DEV=1
 RUN uv sync
+RUN uv pip install nest_asyncio
 
 COPY . .
 
