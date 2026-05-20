@@ -132,9 +132,17 @@ async def initialize():
     arq = ARQ(ARQ_API_URL, ARQ_API_KEY, aiohttpsession)
 
     log.info("Starting bot client")
-    await app.start()
+    try:
+        await app.start()
+    except ValueError as e:
+        if "Peer id invalid" not in str(e):
+            raise
     log.info("Starting userbot client")
-    await app2.start()
+    try:
+        await app2.start()
+    except ValueError as e:
+        if "Peer id invalid" not in str(e):
+            raise
 
     log.info("Gathering profile info")
     x = await app.get_me()
