@@ -513,16 +513,6 @@ async def help_button(client, query):
     return await client.answer_callback_query(query.id)
 
 
-def handle_task_exception(loop, context):
-    exc = context.get("exception")
-    if isinstance(exc, ValueError) and "Peer id invalid" in str(exc):
-        return  # تجاهل خطأ الـ peer غير المعروف بصمت
-    loop.default_exception_handler(context)
-
-
 if __name__ == "__main__":
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    loop.set_exception_handler(handle_task_exception)
     with suppress(asyncio.exceptions.CancelledError):
-        loop.run_until_complete(start_bot())
+        asyncio.run(start_bot())
