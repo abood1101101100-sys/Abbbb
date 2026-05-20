@@ -12,19 +12,6 @@ from pathlib import Path
 import nest_asyncio
 nest_asyncio.apply()
 
-# Patch Pyrogram to suppress "Peer id invalid" errors silently
-import pyrogram.client as _pyro_client
-_original_handle_updates = _pyro_client.Client.handle_updates
-
-async def _patched_handle_updates(self, updates):
-    try:
-        await _original_handle_updates(self, updates)
-    except ValueError as e:
-        if "Peer id invalid" not in str(e):
-            raise
-
-_pyro_client.Client.handle_updates = _patched_handle_updates
-
 from aiohttp import ClientSession
 from motor.motor_asyncio import AsyncIOMotorClient as MongoClient
 from pyrogram import Client, filters
@@ -145,17 +132,9 @@ async def initialize():
     arq = ARQ(ARQ_API_URL, ARQ_API_KEY, aiohttpsession)
 
     log.info("Starting bot client")
-    try:
-        await app.start()
-    except ValueError as e:
-        if "Peer id invalid" not in str(e):
-            raise
+    await app.start()
     log.info("Starting userbot client")
-    try:
-        await app2.start()
-    except ValueError as e:
-        if "Peer id invalid" not in str(e):
-            raise
+    await app2.start()
 
     log.info("Gathering profile info")
     x = await app.get_me()
