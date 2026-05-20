@@ -141,7 +141,7 @@ async def handle_new_member(member, chat):
 
         await chat.restrict_member(member.id, ChatPermissions())
         text = (
-            f"{(member.mention())} هل أنت إنسان؟
+            f"{(member.mention())} هل أنت إنسان؟\n"
 "
             f"حل هذا التحقق خلال {WELCOME_DELAY_KICK_SEC} "
             "ثانية وبـ4 محاولات وإلا ستُطرد."
