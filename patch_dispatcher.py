@@ -4,6 +4,16 @@ path = sys.argv[1]
 with open(path, 'r') as f:
     lines = f.readlines()
 
+# Print lines around 340-345 for debugging
+print("=== Lines 338-346 ===")
+for i, line in enumerate(lines[337:346], start=338):
+    print(f"{i}: {repr(line)}")
+
+print("=== All lines with 'await parser' ===")
+for i, line in enumerate(lines, start=1):
+    if 'await parser' in line:
+        print(f"{i}: {repr(line)}")
+
 new_lines = []
 count = 0
 for line in lines:
