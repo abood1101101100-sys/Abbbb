@@ -21,7 +21,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-import asyncio
 import time
 from inspect import getfullargspec
 from os import path
@@ -80,6 +79,41 @@ log.info("Initializing MongoDB client")
 mongo_client = MongoClient(MONGO_URL)
 db = mongo_client.wbb
 
+# متغيرات عامة يتم تهيئتها لاحقاً في initialize()
+aiohttpsession = None
+arq = None
+telegraph = None
+
+BOT_ID = None
+BOT_NAME = None
+BOT_USERNAME = None
+BOT_MENTION = None
+BOT_DC_ID = None
+
+USERBOT_ID = None
+USERBOT_NAME = None
+USERBOT_USERNAME = None
+USERBOT_MENTION = None
+USERBOT_DC_ID = None
+
+# إنشاء كلاينت البوت واليوزربوت
+if not SESSION_STRING:
+    app2 = Client(
+        name="sessions/userbot",
+        api_id=API_ID,
+        api_hash=API_HASH,
+        phone_number=PHONE_NUMBER,
+    )
+else:
+    app2 = Client(
+        name="sessions/userbot",
+        api_id=API_ID,
+        api_hash=API_HASH,
+        session_string=SESSION_STRING,
+    )
+
+app = Client("sessions/wbb", bot_token=BOT_TOKEN, api_id=API_ID, api_hash=API_HASH)
+
 
 async def load_sudoers():
     global SUDOERS
@@ -101,54 +135,43 @@ async def load_sudoers():
             SUDOERS.add(user_id)
 
 
-loop = asyncio.get_event_loop()
-loop.run_until_complete(load_sudoers())
+async def initialize():
+    global aiohttpsession, arq, telegraph
+    global BOT_ID, BOT_NAME, BOT_USERNAME, BOT_MENTION, BOT_DC_ID
+    global USERBOT_ID, USERBOT_NAME, USERBOT_USERNAME, USERBOT_MENTION, USERBOT_DC_ID
 
-if not SESSION_STRING:
-    app2 = Client(
-        name="sessions/userbot",
-        api_id=API_ID,
-        api_hash=API_HASH,
-        phone_number=PHONE_NUMBER,
-    )
-else:
-    app2 = Client(
-        name="sessions/userbot", api_id=API_ID, api_hash=API_HASH, session_string=SESSION_STRING
-    )
+    await load_sudoers()
 
-aiohttpsession = ClientSession()
+    aiohttpsession = ClientSession()
+    arq = ARQ(ARQ_API_URL, ARQ_API_KEY, aiohttpsession)
 
-arq = ARQ(ARQ_API_URL, ARQ_API_KEY, aiohttpsession)
+    log.info("Starting bot client")
+    await app.start()
+    log.info("Starting userbot client")
+    await app2.start()
 
-app = Client("sessions/wbb", bot_token=BOT_TOKEN, api_id=API_ID, api_hash=API_HASH)
+    log.info("Gathering profile info")
+    x = await app.get_me()
+    y = await app2.get_me()
 
-log.info("Starting bot client")
-app.start()
-log.info("Starting userbot client")
-app2.start()
+    BOT_ID = x.id
+    BOT_NAME = x.first_name + (x.last_name or "")
+    BOT_USERNAME = x.username
+    BOT_MENTION = x.mention
+    BOT_DC_ID = x.dc_id
 
-log.info("Gathering profile info")
-x = app.get_me()
-y = app2.get_me()
+    USERBOT_ID = y.id
+    USERBOT_NAME = y.first_name + (y.last_name or "")
+    USERBOT_USERNAME = y.username
+    USERBOT_MENTION = y.mention
+    USERBOT_DC_ID = y.dc_id
 
-BOT_ID = x.id
-BOT_NAME = x.first_name + (x.last_name or "")
-BOT_USERNAME = x.username
-BOT_MENTION = x.mention
-BOT_DC_ID = x.dc_id
+    if USERBOT_ID not in SUDOERS:
+        SUDOERS.add(USERBOT_ID)
 
-USERBOT_ID = y.id
-USERBOT_NAME = y.first_name + (y.last_name or "")
-USERBOT_USERNAME = y.username
-USERBOT_MENTION = y.mention
-USERBOT_DC_ID = y.dc_id
-
-if USERBOT_ID not in SUDOERS:
-    SUDOERS.add(USERBOT_ID)
-
-log.info("Initializing Telegraph client")
-telegraph = Telegraph(domain="graph.org")
-telegraph.create_account(short_name=BOT_USERNAME)
+    log.info("Initializing Telegraph client")
+    telegraph = Telegraph(domain="graph.org")
+    telegraph.create_account(short_name=BOT_USERNAME)
 
 
 async def eor(msg: Message, **kwargs):
