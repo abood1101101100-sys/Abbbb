@@ -1,20 +1,32 @@
-import re, sys
+import sys
 
 path = sys.argv[1]
 with open(path, 'r') as f:
-    content = f.read()
+    lines = f.readlines()
 
-old = '                await parser(update, users, chats)'
-new = '''                try:
-                    await parser(update, users, chats)
-                except ValueError as e:
-                    if "Peer id invalid" not in str(e):
-                        raise'''
+new_lines = []
+i = 0
+patched = False
+while i < len(lines):
+    line = lines[i]
+    stripped = line.rstrip()
+    # Find the exact line with "await parser(update, users, chats)"
+    if 'await parser(update, users, chats)' in stripped and not patched:
+        indent = len(line) - len(line.lstrip())
+        spaces = ' ' * indent
+        new_lines.append(spaces + 'try:\n')
+        new_lines.append(spaces + '    ' + line.lstrip())
+        new_lines.append(spaces + 'except ValueError as e:\n')
+        new_lines.append(spaces + '    if "Peer id invalid" not in str(e):\n')
+        new_lines.append(spaces + '        raise\n')
+        patched = True
+    else:
+        new_lines.append(line)
+    i += 1
 
-if old in content:
-    content = content.replace(old, new)
+if patched:
     with open(path, 'w') as f:
-        f.write(content)
+        f.writelines(new_lines)
     print("Patched successfully")
 else:
     print("Pattern not found, skipping")
