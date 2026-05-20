@@ -121,6 +121,7 @@ async def start_bot():
 
 @app.on_message(filters.command("start", prefixes="/!"))
 async def start(_, message):
+    print(f"[DEBUG]: /start received from {message.from_user.id if message.from_user else 'unknown'} in {message.chat.id}")
     BOT_NAME = wbb.BOT_NAME
     BOT_USERNAME = wbb.BOT_USERNAME
 
