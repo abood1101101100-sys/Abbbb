@@ -9,6 +9,9 @@ from inspect import getfullargspec
 from os import path
 from pathlib import Path
 
+import uvloop
+uvloop.install()  # يجب أن يكون قبل أي شيء آخر
+
 from aiohttp import ClientSession
 from motor.motor_asyncio import AsyncIOMotorClient as MongoClient
 from pyrogram import Client, filters
@@ -66,8 +69,6 @@ db = mongo_client.wbb
 aiohttpsession = None
 arq = None
 telegraph = None
-app = None
-app2 = None
 
 BOT_ID = None
 BOT_NAME = None
@@ -80,6 +81,24 @@ USERBOT_NAME = None
 USERBOT_USERNAME = None
 USERBOT_MENTION = None
 USERBOT_DC_ID = None
+
+# إنشاء الكلاينت هنا حتى تعمل decorators الموديولات عند الـ import
+if not SESSION_STRING:
+    app2 = Client(
+        name="sessions/userbot",
+        api_id=API_ID,
+        api_hash=API_HASH,
+        phone_number=PHONE_NUMBER,
+    )
+else:
+    app2 = Client(
+        name="sessions/userbot",
+        api_id=API_ID,
+        api_hash=API_HASH,
+        session_string=SESSION_STRING,
+    )
+
+app = Client("sessions/wbb", bot_token=BOT_TOKEN, api_id=API_ID, api_hash=API_HASH)
 
 
 async def load_sudoers():
@@ -103,29 +122,11 @@ async def load_sudoers():
 
 
 async def initialize():
-    global aiohttpsession, arq, telegraph, app, app2
+    global aiohttpsession, arq, telegraph
     global BOT_ID, BOT_NAME, BOT_USERNAME, BOT_MENTION, BOT_DC_ID
     global USERBOT_ID, USERBOT_NAME, USERBOT_USERNAME, USERBOT_MENTION, USERBOT_DC_ID
 
     await load_sudoers()
-
-    # إنشاء الكلاينت داخل الـ event loop الصحيح
-    if not SESSION_STRING:
-        app2 = Client(
-            name="sessions/userbot",
-            api_id=API_ID,
-            api_hash=API_HASH,
-            phone_number=PHONE_NUMBER,
-        )
-    else:
-        app2 = Client(
-            name="sessions/userbot",
-            api_id=API_ID,
-            api_hash=API_HASH,
-            session_string=SESSION_STRING,
-        )
-
-    app = Client("sessions/wbb", bot_token=BOT_TOKEN, api_id=API_ID, api_hash=API_HASH)
 
     aiohttpsession = ClientSession()
     arq = ARQ(ARQ_API_URL, ARQ_API_KEY, aiohttpsession)
