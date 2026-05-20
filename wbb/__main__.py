@@ -24,12 +24,12 @@ SOFTWARE.
 import asyncio
 import importlib
 import re
-from contextlib import suppress
+from contextlib import closing, suppress
 
 from pyrogram import filters, idle
 from pyrogram.enums import ChatType, ParseMode
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
-
+from uvloop import install
 
 import wbb
 from wbb import app, log
@@ -511,5 +511,9 @@ async def help_button(client, query):
 
 
 if __name__ == "__main__":
-    with suppress(asyncio.exceptions.CancelledError):
-        asyncio.run(start_bot())
+    install()
+    loop = asyncio.get_event_loop()
+    with closing(loop):
+        with suppress(asyncio.exceptions.CancelledError):
+            loop.run_until_complete(start_bot())
+        loop.run_until_complete(asyncio.sleep(3.0))
