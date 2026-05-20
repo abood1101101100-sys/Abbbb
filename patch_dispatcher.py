@@ -2,36 +2,31 @@ import sys
 
 path = sys.argv[1]
 with open(path, 'r') as f:
-    lines = f.readlines()
+    content = f.read()
 
-# Print lines around 340-345 for debugging
-print("=== Lines 338-346 ===")
-for i, line in enumerate(lines[337:346], start=338):
-    print(f"{i}: {repr(line)}")
+old = '''                parsed_update, handler_type = (
+                    await parser(update, users, chats)
+                    if parser is not None
+                    else (None, type(None))
+                )'''
 
-print("=== All lines with 'await parser' ===")
-for i, line in enumerate(lines, start=1):
-    if 'await parser' in line:
-        print(f"{i}: {repr(line)}")
+new = '''                if parser is not None:
+                    try:
+                        parsed_update, handler_type = await parser(update, users, chats)
+                    except ValueError as e:
+                        if "Peer id invalid" not in str(e):
+                            raise
+                        continue
+                else:
+                    parsed_update, handler_type = (None, type(None))'''
 
-new_lines = []
-count = 0
-for line in lines:
-    if 'await parser(update, users, chats)' in line:
-        indent = len(line) - len(line.lstrip())
-        sp = ' ' * indent
-        new_lines.append(sp + 'try:\n')
-        new_lines.append(sp + '    ' + line.lstrip())
-        new_lines.append(sp + 'except ValueError as e:\n')
-        new_lines.append(sp + '    if "Peer id invalid" not in str(e):\n')
-        new_lines.append(sp + '        raise\n')
-        count += 1
-    else:
-        new_lines.append(line)
-
-if count > 0:
+if old in content:
+    content = content.replace(old, new)
     with open(path, 'w') as f:
-        f.writelines(new_lines)
-    print(f"Patched {count} occurrence(s) successfully")
+        f.write(content)
+    print("Patched successfully")
 else:
     print("Pattern not found")
+    # Debug
+    for i, line in enumerate(content.splitlines()[338:348], start=339):
+        print(f"{i}: {repr(line)}")
